@@ -7,11 +7,14 @@
     "example": "example"
   },
   "dependencies": {
+    "array-almost-equal": "^1.0.0",
     "binary-search-bounds": "^1.0.0",
     "cubic-hermite": "^1.0.0"
   },
   "devDependencies": {
-    "right-now": "^1.0.0"
+    "almost-equal": "0.0.0",
+    "right-now": "^1.0.0",
+    "tape": "^3.5.0"
   },
   "scripts": {
     "test": "tape test/*.js"

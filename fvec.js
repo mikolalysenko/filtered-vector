@@ -33,7 +33,7 @@ proto.curve = function(t) {
   var state     = this._state
   var velocity  = this._velocity
   var d         = this.dimension
-  if(idx === n) {
+  if(idx >= n-1) {
     var ptr = state.length-1
     var tf = t - time[n-1]
     for(var i=0; i<d; ++i, --ptr) {
@@ -50,9 +50,9 @@ proto.curve = function(t) {
     var v1  = this._scratch[4]
     for(var i=0; i<d; ++i, --ptr) {
       x0[i] = state[ptr]
-      v0[i] = velocity[ptr]
+      v0[i] = velocity[ptr] * dt
       x1[i] = state[ptr+d]
-      v1[i] = velocity[ptr+d]
+      v1[i] = velocity[ptr+d] * dt
     }
     cubicHermite(x0, v0, x1, v1, (t-t0)/dt, result)
   }
@@ -62,12 +62,12 @@ proto.curve = function(t) {
 proto.dcurve = function(t) {
   var time     = this._time
   var n        = time.length
-  var idx      = bsearch.gt(time, t)
+  var idx      = bsearch.le(time, t)
   var result   = this._scratch[0]
   var state    = this._state
   var velocity = this._velocity
   var d        = this.dimension
-  if(idx === n) {
+  if(idx >= n-1) {
     var ptr = state.length-1
     var tf = t - time[n-1]
     for(var i=0; i<d; ++i, --ptr) {
@@ -84,11 +84,14 @@ proto.dcurve = function(t) {
     var v1 = this._scratch[4]
     for(var i=0; i<d; ++i, --ptr) {
       x0[i] = state[ptr]
-      v0[i] = velocity[ptr]
+      v0[i] = velocity[ptr] * dt
       x1[i] = state[ptr+d]
-      v1[i] = velocity[ptr+d]
+      v1[i] = velocity[ptr+d] * dt
     }
     cubicHermite.derivative(x0, v0, x1, v1, (t-t0)/dt, result)
+    for(var i=0; i<d; ++i) {
+      result[i] /= dt
+    }
   }
   return result
 }
@@ -106,20 +109,21 @@ proto.push = function(t, w, x, y, z) {
   var state     = this._state
   var velocity  = this._velocity
   var ptr       = state.length-this.dimension
+  var dt        = t - t0
   this._time.push(t)
   switch(this.dimension) {
     case 4:
       state.push(z)
-      velocity.push(z - state[ptr++])
+      velocity.push((z - state[ptr++]) / dt)
     case 3:
       state.push(y)
-      velocity.push(y - state[ptr++])
+      velocity.push((y - state[ptr++]) / dt)
     case 2:
       state.push(x)
-      velocity.push(x - state[ptr++])
+      velocity.push((x - state[ptr++]) / dt)
     case 1:
       state.push(w)
-      velocity.push(w - state[ptr])
+      velocity.push((w - state[ptr]) / dt)
   }
 }
 
@@ -154,20 +158,21 @@ proto.move = function(t, dw, dx, dy, dz) {
   var state    = this._state
   var velocity = this._velocity
   var statePtr = state.length - this.dimension
+  var dt       = t - t0
   this.time.push(t)
   switch(this.dimension) {
     case 4:
       state.push(state[statePtr++] + dz)
-      velocity.push(dz)
+      velocity.push(dz / dt)
     case 3:
       state.push(state[statePtr++] + dy)
-      velocity.push(dy)
+      velocity.push(dy / dt)
     case 2:
       state.push(state[statePtr++] + dx)
-      velocity.push(dx)
+      velocity.push(dx / dt)
     case 1:
       state.push(state[statePtr++] + dw)
-      velocity.push(dw)
+      velocity.push(dw / dt)
   }
 }
 
