@@ -101,6 +101,17 @@ proto.lastT = function() {
   return time[time.length-1]
 }
 
+proto.stable = function() {
+  var velocity = this._velocity
+  var ptr = velocity.length
+  for(var i=this.dimension-1; i>=0; --i) {
+    if(velocity[--ptr]) {
+      return false
+    }
+  }
+  return true
+}
+
 proto.push = function(t, w, x, y, z) {
   var t0 = this.lastT()
   if(t <= t0) {
