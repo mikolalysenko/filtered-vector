@@ -39,7 +39,7 @@ function paint() {
 paint()
 ```
 
-Try out the demo in your browser.
+[Try out the demo in your browser.](https://mikolalysenko.github.io/filtered-vector)
 
 # Install
 
