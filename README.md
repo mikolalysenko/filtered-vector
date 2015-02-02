@@ -60,24 +60,55 @@ Creates a new smoothed vector with the given initial state, velocity and time.
 
 **Returns** A new smoothed vector valued curve
 
+**Note** This module assumes that the dimension of the curve is at most 4.
+
 ## Methods
 
 #### `vec.curve(t)`
+Computes the value of the curve at time `t`
+
+* `t` is the time parameter to sample the curve
+
+**Returns** The value of the curve at time `t`
 
 #### `vec.dcurve(t)`
+Computes the derivative of the curve at time `t`
+
+* `t` is the time parameter
+
+**Returns** The derivative of the curve at time `t`
 
 #### `vec.push(t, w, x, y, z)`
+Adds a new data point onto the end of the curve
 
-#### `vec.flush(t)`
+* `t` is the time the new data point was sampled
+* `w,x,y,z` are the components of the curve vector
 
 #### `vec.move(t, dw, dx, dy, dz)`
+Incrementally moves the curve from the last sampled position by an offset.  This is useful with input devices that emit relative motion (for example scrolling, key press events, pointer lock)
 
-#### `vec.set(t, x, y, z, w)`
+* `t` is the time at which the move event occured
+* `dw, dx, dy, dz` are the components of the relative motion
+
+#### `vec.set(t, w, x, y, z)`
+Sets the state of the curve at time `t`
+
+* `t` is the time parameter to sample
+* `w, x, y, z` are the components of the state
 
 #### `vec.idle(t)`
+Adds a stationary data point to the curve (ie notify the curve that no input state has changed)
+
+* `t` is the time at which the curve was idle
+
+#### `vec.flush(t)`
+Removes all samples in the buffer before time `t`
+
+* `t` is the cutoff time
 
 #### `vec.lastT()`
 
+**Returns** The time of the last sample in the curve
+
 # License
 (c) 2015 Mikola Lysenko.  MIT License
-
