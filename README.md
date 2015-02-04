@@ -117,7 +117,7 @@ Removes all samples in the buffer before time `t`
 
 **Returns** The time of the last sample in the curve
 
-#### `vec.stable()
+#### `vec.stable()`
 
 **Returns** `true` is the vector is stationary as of the last event.
 
