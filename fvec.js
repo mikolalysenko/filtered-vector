@@ -58,13 +58,21 @@ proto.curve = function(t) {
     var x1  = this._scratch[2]
     var v0  = this._scratch[3]
     var v1  = this._scratch[4]
+    var steady = true
     for(var i=0; i<d; ++i, --ptr) {
       x0[i] = state[ptr]
       v0[i] = velocity[ptr] * dt
       x1[i] = state[ptr+d]
       v1[i] = velocity[ptr+d] * dt
+      steady = steady && (x0[i] === x1[i] && v0[i] === v1[i] && v0[i] === 0.0)
     }
-    cubicHermite(x0, v0, x1, v1, (t-t0)/dt, result)
+    if(steady) {
+      for(var i=0; i<d; ++i) {
+        result[i] = x0[i]
+      }
+    } else {
+      cubicHermite(x0, v0, x1, v1, (t-t0)/dt, result)
+    }
   }
   var lo = bounds[0]
   var hi = bounds[1]
@@ -97,15 +105,23 @@ proto.dcurve = function(t) {
     var x1 = this._scratch[2]
     var v0 = this._scratch[3]
     var v1 = this._scratch[4]
+    var steady = true
     for(var i=0; i<d; ++i, --ptr) {
       x0[i] = state[ptr]
       v0[i] = velocity[ptr] * dt
       x1[i] = state[ptr+d]
       v1[i] = velocity[ptr+d] * dt
+      steady = steady && (x0[i] === x1[i] && v0[i] === v1[i] && v0[i] === 0.0)
     }
-    cubicHermite.derivative(x0, v0, x1, v1, (t-t0)/dt, result)
-    for(var i=0; i<d; ++i) {
-      result[i] /= dt
+    if(steady) {
+      for(var i=0; i<d; ++i) {
+        result[i] = 0.0
+      }
+    } else {
+      cubicHermite.derivative(x0, v0, x1, v1, (t-t0)/dt, result)
+      for(var i=0; i<d; ++i) {
+        result[i] /= dt
+      }
     }
   }
   return result
@@ -213,17 +229,23 @@ proto.move = function(t) {
 }
 
 proto.idle = function(t) {
-  if(t <= this.lastT()) {
+  var t0 = this.lastT()
+  if(t <= t0) {
     return
   }
   var d        = this.dimension
   var state    = this._state
   var velocity = this._velocity
   var statePtr = state.length-d
+  var bounds   = this.bounds
+  var lo       = bounds[0]
+  var hi       = bounds[1]
+  var dt       = t - t0
   this._time.push(t)
-  for(var i=0; i<d; ++i) {
-    state.push(state[statePtr++])
+  for(var i=d-1; i>=0; --i) {
+    state.push(clamp(lo[i], hi[i], state[statePtr] + dt * velocity[statePtr]))
     velocity.push(0)
+    statePtr += 1
   }
 }
 
