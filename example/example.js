@@ -4,6 +4,8 @@ var now = require('right-now')
 var filterVector = require('../fvec')
 
 var smoothPosition = filterVector([256, 256])
+smoothPosition.bounds = [[0,0], [512,512]]
+
 
 var canvas = document.createElement('canvas')
 canvas.width = 512
@@ -18,7 +20,8 @@ canvas.addEventListener('mousemove', function(ev) {
 
 function paint() {
   requestAnimationFrame(paint)
-  var t = now()
+  var t = now() - 30
+  smoothPosition.idle(t)
   context.fillStyle = 'rgba(0,0,0,1)'
   context.fillRect(0,0,512,512)
   
