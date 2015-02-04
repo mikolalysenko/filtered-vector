@@ -60,8 +60,6 @@ Creates a new smoothed vector with the given initial state, velocity and time.
 
 **Returns** A new smoothed vector valued curve
 
-**Note** This module assumes that the dimension of the curve is at most 4.
-
 ## Methods
 
 #### `vec.curve(t)`
@@ -78,23 +76,32 @@ Computes the derivative of the curve at time `t`
 
 **Returns** The derivative of the curve at time `t`
 
-#### `vec.push(t, w, x, y, z)`
+#### `vec.bounds`
+A pair of arrays giving the upper and lower bounds on the constraints of the vector.  Default is `[-Infinity,-Infinity, ...]` and `[Infinity,Infinity,...]`
+
+#### `vec.push(t, ...)`
 Adds a new data point onto the end of the curve
 
 * `t` is the time the new data point was sampled
-* `w,x,y,z` are the components of the curve vector
+* `...` are the components of the curve vector
 
-#### `vec.move(t, dw, dx, dy, dz)`
+#### `vec.move(t, ...)`
 Incrementally moves the curve from the last sampled position by an offset.  This is useful with input devices that emit relative motion (for example scrolling, key press events, pointer lock)
 
 * `t` is the time at which the move event occured
-* `dw, dx, dy, dz` are the components of the relative motion
+* `...` are the components of the relative motion
 
-#### `vec.set(t, w, x, y, z)`
+#### `vec.set(t, ...)`
 Sets the state of the curve at time `t`
 
 * `t` is the time parameter to sample
-* `w, x, y, z` are the components of the state
+* `...` are the components of the state
+
+#### `vec.jump(t, ...)`
+Sets the state of the vector at time `t` with no smoothing.
+
+* `t` is the time parameter to sample
+* `...` are the components of the vector
 
 #### `vec.idle(t)`
 Adds a stationary data point to the curve (ie notify the curve that no input state has changed)

@@ -5,8 +5,17 @@ module.exports = createFilteredVector
 var cubicHermite = require('cubic-hermite')
 var bsearch = require('binary-search-bounds')
 
+function clamp(lo, hi, x) {
+  return Math.min(hi, Math.max(lo, x))  
+}
+
 function FilteredVector(state0, velocity0, t0) {
   this.dimension  = state0.length
+  this.bounds     = [ new Array(this.dimension), new Array(this.dimension) ]
+  for(var i=0; i<this.dimension; ++i) {
+    this.bounds[0][i] = -Infinity
+    this.bounds[1][i] = Infinity
+  }
   this._state     = state0.slice().reverse()
   this._velocity  = velocity0.slice().reverse()
   this._time      = [ t0 ]
@@ -33,6 +42,7 @@ proto.curve = function(t) {
   var state     = this._state
   var velocity  = this._velocity
   var d         = this.dimension
+  var bounds    = this.bounds
   if(idx >= n-1) {
     var ptr = state.length-1
     var tf = t - time[n-1]
@@ -55,6 +65,11 @@ proto.curve = function(t) {
       v1[i] = velocity[ptr+d] * dt
     }
     cubicHermite(x0, v0, x1, v1, (t-t0)/dt, result)
+  }
+  var lo = bounds[0]
+  var hi = bounds[1]
+  for(var i=0; i<d; ++i) {
+    result[i] = clamp(lo[i], hi[i], result[i])
   }
   return result
 }
@@ -112,78 +127,88 @@ proto.stable = function() {
   return true
 }
 
-proto.push = function(t, w, x, y, z) {
+
+proto.jump = function(t) {
   var t0 = this.lastT()
-  if(t <= t0) {
+  var d  = this.dimension
+  if(t <= t0 || arguments.length !== d+1) {
+    return
+  }
+  var state     = this._state
+  var velocity  = this._velocity
+  var ptr       = state.length-this.dimension
+  var bounds    = this.bounds
+  var lo        = bounds[0]
+  var hi        = bounds[1]
+  this._time.push(t0)
+  for(var i=0; i<d; ++i) {
+    state.push(state[ptr++])
+    velocity.push(0)
+  }
+  this._time.push(t)
+  for(var i=arguments.length-1; i>0; --i) {
+    state.push(clamp(lo[i-1], hi[i-1], arguments[i]))
+    velocity.push(0)    
+  }
+}
+
+
+proto.push = function(t) {
+  var t0 = this.lastT()
+  var d  = this.dimension
+  if(t <= t0 || arguments.length !== d+1) {
     return
   }
   var state     = this._state
   var velocity  = this._velocity
   var ptr       = state.length-this.dimension
   var dt        = t - t0
+  var bounds    = this.bounds
+  var lo        = bounds[0]
+  var hi        = bounds[1]
   this._time.push(t)
-  switch(this.dimension) {
-    case 4:
-      state.push(z)
-      velocity.push((z - state[ptr++]) / dt)
-    case 3:
-      state.push(y)
-      velocity.push((y - state[ptr++]) / dt)
-    case 2:
-      state.push(x)
-      velocity.push((x - state[ptr++]) / dt)
-    case 1:
-      state.push(w)
-      velocity.push((w - state[ptr]) / dt)
+  for(var i=arguments.length-1; i>0; --i) {
+    var xc = clamp(lo[i-1], hi[i-1], arguments[i])
+    state.push(xc)
+    velocity.push((xc - state[ptr++]) / dt)
   }
 }
 
-proto.set = function(t, w, x, y, z) {
-  if(t <= this.lastT()) {
+proto.set = function(t) {
+  var d = this.dimension
+  if(t <= this.lastT() || arguments.length !== d+1) {
     return
   }
-  var state    = this._state
-  var velocity = this._velocity
+  var state     = this._state
+  var velocity  = this._velocity
+  var bounds    = this.bounds
+  var lo        = bounds[0]
+  var hi        = bounds[1]
   this._time.push(t)
-  switch(this.dimension) {
-    case 4:
-      state.push(z)
-      velocity.push(0)
-    case 3:
-      state.push(y)
-      velocity.push(0)
-    case 2:
-      state.push(x)
-      velocity.push(0)
-    case 1:
-      state.push(w)
-      velocity.push(0)
+  for(var i=arguments.length-1; i>0; --i) {
+    state.push(clamp(lo[i-1], hi[i-1], arguments[i]))
+    velocity.push(0)
   }
 }
 
-proto.move = function(t, dw, dx, dy, dz) {
+proto.move = function(t) {
   var t0 = this.lastT()
-  if(t <= t0) {
+  var d  = this.dimension
+  if(t <= t0 || arguments.length !== d+1) {
     return
   }
   var state    = this._state
   var velocity = this._velocity
   var statePtr = state.length - this.dimension
+  var bounds   = this.bounds
+  var lo       = bounds[0]
+  var hi       = bounds[1]
   var dt       = t - t0
-  this.time.push(t)
-  switch(this.dimension) {
-    case 4:
-      state.push(state[statePtr++] + dz)
-      velocity.push(dz / dt)
-    case 3:
-      state.push(state[statePtr++] + dy)
-      velocity.push(dy / dt)
-    case 2:
-      state.push(state[statePtr++] + dx)
-      velocity.push(dx / dt)
-    case 1:
-      state.push(state[statePtr++] + dw)
-      velocity.push(dw / dt)
+  this._time.push(t)
+  for(var i=arguments.length-1; i>0; --i) {
+    var dx = arguments[i]
+    state.push(clamp(lo[i-1], hi[i-1], state[statePtr++] + dx))
+    velocity.push(dx / dt)
   }
 }
 
@@ -191,32 +216,23 @@ proto.idle = function(t) {
   if(t <= this.lastT()) {
     return
   }
-  var state = this._state
+  var d        = this.dimension
+  var state    = this._state
   var velocity = this._velocity
-  var statePtr = state.length-1
+  var statePtr = state.length-d
   this._time.push(t)
-  switch(this.dimension) {
-    case 4:
-      state.push(state[--statePtr])
-      velocity.push(0)
-    case 3:
-      state.push(state[--statePtr])
-      velocity.push(0)
-    case 2:
-      state.push(state[--statePtr])
-      velocity.push(0)
-    case 1:
-      state.push(state[--statePtr])
-      velocity.push(0)
+  for(var i=0; i<d; ++i) {
+    state.push(state[statePtr++])
+    velocity.push(0)
   }
 }
 
 function getZero(d) {
-  d = d|0
-  if(d <= 0 || d > 4) {
-    throw new Error('invalid dimension, must be between 1 and 4')
+  var result = new Array(d)
+  for(var i=0; i<d; ++i) {
+    result[i] = 0.0
   }
-  return [0,0,0,0].slice(0, d)
+  return result
 }
 
 function createFilteredVector(initState, initVelocity, initTime) {
@@ -238,9 +254,8 @@ function createFilteredVector(initState, initVelocity, initTime) {
         initTime = 0
       }
     case 3:
-      if(initState.length !== initVelocity.length ||
-         initState.length <= 0 || 4 < initState.length) {
-        throw new Error('invalid dimension, must be between 1 and 4')
+      if(initState.length !== initVelocity.length) {
+        throw new Error('state and velocity lengths must match')
       }
       return new FilteredVector(initState, initVelocity, initTime)
   }
