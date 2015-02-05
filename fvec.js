@@ -143,7 +143,6 @@ proto.stable = function() {
   return true
 }
 
-
 proto.jump = function(t) {
   var t0 = this.lastT()
   var d  = this.dimension
@@ -156,10 +155,12 @@ proto.jump = function(t) {
   var bounds    = this.bounds
   var lo        = bounds[0]
   var hi        = bounds[1]
-  this._time.push(t0)
-  for(var i=0; i<d; ++i) {
-    state.push(state[ptr++])
-    velocity.push(0)
+  this._time.push(t0, t)
+  for(var j=0; j<2; ++j) {
+    for(var i=0; i<d; ++i) {
+      state.push(state[ptr++])
+      velocity.push(0)
+    }
   }
   this._time.push(t)
   for(var i=arguments.length-1; i>0; --i) {
@@ -167,7 +168,6 @@ proto.jump = function(t) {
     velocity.push(0)    
   }
 }
-
 
 proto.push = function(t) {
   var t0 = this.lastT()
