@@ -146,7 +146,7 @@ proto.stable = function() {
 proto.jump = function(t) {
   var t0 = this.lastT()
   var d  = this.dimension
-  if(t <= t0 || arguments.length !== d+1) {
+  if(t < t0 || arguments.length !== d+1) {
     return
   }
   var state     = this._state
@@ -172,7 +172,7 @@ proto.jump = function(t) {
 proto.push = function(t) {
   var t0 = this.lastT()
   var d  = this.dimension
-  if(t <= t0 || arguments.length !== d+1) {
+  if(t < t0 || arguments.length !== d+1) {
     return
   }
   var state     = this._state
@@ -182,17 +182,18 @@ proto.push = function(t) {
   var bounds    = this.bounds
   var lo        = bounds[0]
   var hi        = bounds[1]
+  var sf        = (dt > 1e-6) ? 1/dt : 0
   this._time.push(t)
   for(var i=arguments.length-1; i>0; --i) {
     var xc = clamp(lo[i-1], hi[i-1], arguments[i])
     state.push(xc)
-    velocity.push((xc - state[ptr++]) / dt)
+    velocity.push((xc - state[ptr++]) * sf)
   }
 }
 
 proto.set = function(t) {
   var d = this.dimension
-  if(t <= this.lastT() || arguments.length !== d+1) {
+  if(t < this.lastT() || arguments.length !== d+1) {
     return
   }
   var state     = this._state
@@ -220,17 +221,18 @@ proto.move = function(t) {
   var lo       = bounds[0]
   var hi       = bounds[1]
   var dt       = t - t0
+  var sf       = (dt > 1e-6) ? 1/dt : 0.0
   this._time.push(t)
   for(var i=arguments.length-1; i>0; --i) {
     var dx = arguments[i]
     state.push(clamp(lo[i-1], hi[i-1], state[statePtr++] + dx))
-    velocity.push(dx / dt)
+    velocity.push(dx * sf)
   }
 }
 
 proto.idle = function(t) {
   var t0 = this.lastT()
-  if(t <= t0) {
+  if(t < t0) {
     return
   }
   var d        = this.dimension
