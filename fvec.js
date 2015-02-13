@@ -163,7 +163,7 @@ proto.jump = function(t) {
     }
   }
   this._time.push(t)
-  for(var i=arguments.length-1; i>0; --i) {
+  for(var i=d; i>0; --i) {
     state.push(clamp(lo[i-1], hi[i-1], arguments[i]))
     velocity.push(0)    
   }
@@ -184,7 +184,7 @@ proto.push = function(t) {
   var hi        = bounds[1]
   var sf        = (dt > 1e-6) ? 1/dt : 0
   this._time.push(t)
-  for(var i=arguments.length-1; i>0; --i) {
+  for(var i=d; i>0; --i) {
     var xc = clamp(lo[i-1], hi[i-1], arguments[i])
     state.push(xc)
     velocity.push((xc - state[ptr++]) * sf)
@@ -202,7 +202,7 @@ proto.set = function(t) {
   var lo        = bounds[0]
   var hi        = bounds[1]
   this._time.push(t)
-  for(var i=arguments.length-1; i>0; --i) {
+  for(var i=d; i>0; --i) {
     state.push(clamp(lo[i-1], hi[i-1], arguments[i]))
     velocity.push(0)
   }
@@ -223,7 +223,7 @@ proto.move = function(t) {
   var dt       = t - t0
   var sf       = (dt > 1e-6) ? 1/dt : 0.0
   this._time.push(t)
-  for(var i=arguments.length-1; i>0; --i) {
+  for(var i=d; i>0; --i) {
     var dx = arguments[i]
     state.push(clamp(lo[i-1], hi[i-1], state[statePtr++] + dx))
     velocity.push(dx * sf)
