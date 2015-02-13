@@ -1,6 +1,6 @@
 {
   "name": "filtered-vector",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Filter an input vector valued curve",
   "main": "fvec.js",
   "directories": {
