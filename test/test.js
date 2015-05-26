@@ -7,7 +7,11 @@ var filterVec = require('../fvec')
 tape('filter-vec', function(t) {
   var v = filterVec([0,0,0,0])
 
+
   t.ok(almostEqual(v.curve(0), [0,0,0,0]))
+
+  t.ok(almostEqual(v.curve(-1e6), [0,0,0,0]))
+
 
   v.push(1,1,2,3,4)
   t.ok(almostEqual(v.curve(0), [0,0,0,0]))
@@ -26,7 +30,7 @@ tape('filter-vec', function(t) {
   t.ok(v.stable(5))
 
   v.move(6, 1,-1,1,-1)
-  t.ok(almostEqual(v.curve(6), [3,2,5,4]))
+  t.ok(almostEqual(v.curve(6), [3,2,5,4]), v.curve(6))
   t.ok(almostEqual(v.dcurve(6), [0.5,-0.5,0.5,-0.5]))
   t.ok(!v.stable(7))
 
