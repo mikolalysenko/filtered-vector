@@ -6,7 +6,7 @@ var cubicHermite = require('cubic-hermite')
 var bsearch = require('binary-search-bounds')
 
 function clamp(lo, hi, x) {
-  return Math.min(hi, Math.max(lo, x))  
+  return Math.min(hi, Math.max(lo, x))
 }
 
 function FilteredVector(state0, velocity0, t0) {
@@ -43,7 +43,12 @@ proto.curve = function(t) {
   var velocity  = this._velocity
   var d         = this.dimension
   var bounds    = this.bounds
-  if(idx >= n-1) {
+  if(idx < 0) {
+    var ptr = d-1
+    for(var i=0; i<d; ++i, --ptr) {
+      result[i] = state[ptr]
+    }
+  } else if(idx >= n-1) {
     var ptr = state.length-1
     var tf = t - time[n-1]
     for(var i=0; i<d; ++i, --ptr) {
@@ -165,7 +170,7 @@ proto.jump = function(t) {
   this._time.push(t)
   for(var i=d; i>0; --i) {
     state.push(clamp(lo[i-1], hi[i-1], arguments[i]))
-    velocity.push(0)    
+    velocity.push(0)
   }
 }
 
